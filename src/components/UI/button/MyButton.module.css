@@ -6,7 +6,8 @@
     border: 1px solid rgb(97, 176, 219);
     cursor: pointer;
 }
-/* .myBtn .selected{
+.selected{
     border: 2px solid orange;
     font-weight: bold;
-} */
+    color: orange;
+}

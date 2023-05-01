@@ -8,10 +8,13 @@ const PostItem = (props) => {
   return (
     <div className="post">
         <div className="post__content">
-            <strong>{props.number}. {props.a.title}</strong>
+            <strong>{props.a.id}. {props.a.title}</strong>
             <div>
                 {props.a.body}
             </div>
+        </div>
+        <div className="post__btn">
+            <MyButton to={'/posts/'+ props.a.id} >Open</MyButton>   
         </div>
         <div className="post__btn">
             <MyButton onClick = {deletePost} >Delete</MyButton>   
