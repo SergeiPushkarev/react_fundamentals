@@ -18,7 +18,7 @@
     width: 100vw;
     display: flex;
     align-items: center;
-    justify-content: end;
+    justify-content: space-between;
     padding: 0 15px 15px;
     background-color: gainsboro;
     margin-bottom: 15px;

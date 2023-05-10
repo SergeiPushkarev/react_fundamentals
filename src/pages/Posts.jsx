@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from "react";
+import React, {useState, useEffect, useRef} from "react";
 import PostService from "../API/PostService";
 import PostFilter from "../components/PostFilter";
 import PostForm from "../components/PostForm";
@@ -10,6 +10,7 @@ import { useFetching } from "../hooks/useFetching";
 import { usePosts } from "../hooks/usePosts";
 import { getTotalPages } from "../utils/totalPages";
 import Pagination from "../components/UI/pagination/Pagination";
+import { useObserver } from "../hooks/useObserver";
 function Posts() {
     const [posts, setPosts] = useState([])
     const [filter, setFilter] = useState({sorted:'', searched:''})
@@ -17,15 +18,17 @@ function Posts() {
     const [totalPage, setTotalPage] = useState(0)
     const [limitPage, setLimitPage] = useState(9)
     const [page, setPage] = useState(1)
-  
+    const lastElem = useRef()
   
     const [recivedResp, isLoading, fetchError] = useFetching(async (limitPage,page)=>{
-      const posts = await PostService.getAllPosts(limitPage,page);
-      setPosts(posts.data)
-      const total = posts.headers['x-total-count']
+      const postsResp = await PostService.getAllPosts(limitPage,page);
+      setPosts([...posts, ...postsResp.data])
+      const total = postsResp.headers['x-total-count']
       setTotalPage(getTotalPages(total, limitPage))
     })
-  
+
+    useObserver(lastElem, isLoading, page<totalPage, ()=>{setPage(page+1)})
+
     useEffect(() => {
       recivedResp(limitPage,page)
     }, [page])
@@ -59,9 +62,9 @@ function Posts() {
         {fetchError &&
           <h1 style={{textAlign:'center', color:"red"}}>Произошла ошибка ${fetchError}</h1>
         }
-        {isLoading
-          ? <Loader/>
-          : <PostList post={sortedAndSearhedPosts} title = "Список постов 1" deletePost = {deletePost} />
+        <PostList post={sortedAndSearhedPosts} title = "Список постов 1" deletePost = {deletePost} />
+        <div ref={lastElem} ></div>
+        {isLoading && <Loader/> 
         }
         <Pagination total={totalPage} page={page} changePage={changePage}></Pagination>
       </div>
