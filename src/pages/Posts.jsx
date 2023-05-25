@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from "react";
+import React, {useState, useEffect, useRef } from "react";
 import PostService from "../API/PostService";
 import PostFilter from "../components/PostFilter";
 import PostForm from "../components/PostForm";
@@ -9,30 +9,29 @@ import MyModal from "../components/UI/modal/MyModal";
 import { useFetching } from "../hooks/useFetching";
 import { usePosts } from "../hooks/usePosts";
 import { getTotalPages } from "../utils/totalPages";
-import Pagination from "../components/UI/pagination/Pagination";
+import {useObserver} from '../hooks/useObserver'
 function Posts() {
     const [posts, setPosts] = useState([])
     const [filter, setFilter] = useState({sorted:'', searched:''})
     const [modal, setModal] = useState(false)
     const [totalPage, setTotalPage] = useState(0)
-    const [limitPage, setLimitPage] = useState(9)
+    const [limitPage, setLimitPage] = useState(10)
     const [page, setPage] = useState(1)
+    const lastElementPost = useRef()
   
   
     const [recivedResp, isLoading, fetchError] = useFetching(async (limitPage,page)=>{
-      const posts = await PostService.getAllPosts(limitPage,page);
-      setPosts(posts.data)
-      const total = posts.headers['x-total-count']
+      const postsResp = await PostService.getAllPosts(limitPage,page);
+      setPosts([...posts, ...postsResp.data])
+      const total = postsResp.headers['x-total-count']
       setTotalPage(getTotalPages(total, limitPage))
     })
+
+    useObserver(lastElementPost, isLoading, page<totalPage, ()=>{setPage(page+1)})
   
     useEffect(() => {
       recivedResp(limitPage,page)
     }, [page])
-  
-    const changePage = (page)=>{
-      setPage(page)
-    }
   
     const createOneNewPost = (newPost) => {
       setPosts([...posts, newPost])
@@ -59,11 +58,10 @@ function Posts() {
         {fetchError &&
           <h1 style={{textAlign:'center', color:"red"}}>Произошла ошибка ${fetchError}</h1>
         }
-        {isLoading
-          ? <Loader/>
-          : <PostList post={sortedAndSearhedPosts} title = "Список постов 1" deletePost = {deletePost} />
-        }
-        <Pagination total={totalPage} page={page} changePage={changePage}></Pagination>
+        <PostList post={sortedAndSearhedPosts} title = "Список постов 1" deletePost = {deletePost} />
+        <div ref={lastElementPost}></div>
+        {isLoading && <Loader/>}
+        {/* <Pagination total={totalPage} page={page} changePage={changePage}></Pagination> */}
       </div>
     );
 }
